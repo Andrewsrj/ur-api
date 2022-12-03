@@ -78,12 +78,12 @@ export class PostsService {
      * @param token - Token de autenticação do usuário
      * @param post - Post Object
      */
-    async create(token: string, post: Post) {
-        const verifyId = await this.verifyToken(token);
+    async create(/*token: string,*/ post: Post) {
+        /*const verifyId = await this.verifyToken(token);
         if (!verifyId) {
             console.log("Access Denied!")
             throw new HttpException('Access Denied!', HttpStatus.UNAUTHORIZED);
-        }
+        }*/
         var db = admin.database();
         var ref = db.ref("feed");
         const newPost = ref.push();
@@ -104,6 +104,7 @@ export class PostsService {
 
     private async verifyToken(tokenId: string) {
         if (!tokenId) {
+            console.log(tokenId)
             return false;
         }
         var auth = admin.auth();
