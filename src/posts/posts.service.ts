@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as admin from 'firebase-admin';
-import {Post} from './Post';
+import { Post } from './Post';
 
 @Injectable()
 export class PostsService {
@@ -15,16 +15,16 @@ export class PostsService {
         var auth = admin.auth();
         await Promise.all(data.map(async (child) => {
             await auth
-            .getUser(child.author.id)
-            .then((userRecord) => {
-                // See the UserRecord reference doc for the contents of userRecord.
-                const authorData = {id: userRecord.uid, name: userRecord.displayName, image: userRecord.photoURL?userRecord.photoURL:"undefined", verified: userRecord.emailVerified};
-                child.author = authorData;
-                newData.push(child);
-            })
-            .catch((error) => {
-                console.log('Error fetching user data:', error);
-            });
+                .getUser(child.author.id)
+                .then((userRecord) => {
+                    // See the UserRecord reference doc for the contents of userRecord.
+                    const authorData = { id: userRecord.uid, name: userRecord.displayName, image: userRecord.photoURL ? userRecord.photoURL : "undefined", verified: userRecord.emailVerified };
+                    child.author = authorData;
+                    newData.push(child);
+                })
+                .catch((error) => {
+                    console.log('Error fetching user data:', error);
+                });
         }))
         return newData;
     }
@@ -33,13 +33,19 @@ export class PostsService {
      * @param token - Token de autenticação do usuário
      * @returns newdata - Post object com dados atualizados do autor
      */
-    async findAll(): Promise<any> {
+    async findAll(token: string): Promise<any> {
+        const verifyId = await this.verifyToken(token);
+        if (!verifyId) {
+            console.log("Access Denied!")
+            throw new HttpException('Access Denied!', HttpStatus.UNAUTHORIZED);
+        }
+        console.log(this.verifyToken(token))
         // As an admin, the app has access to read and write all data, regardless of Security Rules
         var db = admin.database();
         var ref = db.ref("feed");
         var data = [];
-        await ref.once("value", async function(snapshot) {
-            snapshot.forEach((child) => {  
+        await ref.once("value", async function (snapshot) {
+            snapshot.forEach((child) => {
                 data.push(child.val());
             })
             await Promise.all(data);
@@ -52,7 +58,12 @@ export class PostsService {
      * @param id - Unique ID do Post
      * @returns data - Post Object 
      */
-    async findById(id: string): Promise<any> {
+    async findById(token: string, id: string): Promise<any> {
+        const verifyId = await this.verifyToken(token);
+        if (!verifyId) {
+            console.log("Access Denied!")
+            throw new HttpException('Access Denied!', HttpStatus.UNAUTHORIZED);
+        }
         var db = admin.database();
         var ref = db.ref("feed");
         var data = [];
@@ -67,8 +78,12 @@ export class PostsService {
      * @param token - Token de autenticação do usuário
      * @param post - Post Object
      */
-    create(post: Post) {
-        console.log(post)
+    async create(token: string, post: Post) {
+        const verifyId = await this.verifyToken(token);
+        if (!verifyId) {
+            console.log("Access Denied!")
+            throw new HttpException('Access Denied!', HttpStatus.UNAUTHORIZED);
+        }
         var db = admin.database();
         var ref = db.ref("feed");
         const newPost = ref.push();
@@ -77,13 +92,26 @@ export class PostsService {
         var refChild = db.ref("feed/" + postId);
         console.log("id:", postId);
         newPost.set(post, (error) => {
-            if(error) {
+            if (error) {
                 console.log(error);
             } else {
-                refChild.update( { "id": postId } );
+                refChild.update({ "id": postId });
                 console.log(post);
             }
         });
 
+    }
+
+    private async verifyToken(tokenId: string) {
+        if (!tokenId) {
+            return false;
+        }
+        var auth = admin.auth();
+        return auth.verifyIdToken(tokenId)
+            .then((decodedToken) => {
+                const uid = decodedToken.uid
+                return uid
+            })
+            .catch(() => { return false })
     }
 }

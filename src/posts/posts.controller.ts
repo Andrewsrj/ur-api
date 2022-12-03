@@ -9,17 +9,17 @@ export class PostsController {
     constructor(private postsService: PostsService) {}
 
     @Get()
-    async findAll(): Promise<any> {
-      return this.postsService.findAll();
+    async findAll(@Param() params): Promise<any> {
+      return this.postsService.findAll(params.tokenId);
     }
 
     @Get(':id')
     async findById(@Param() params) {
-        return this.postsService.findById(params.id);
+        return this.postsService.findById(params.tokenId, params.id);
     }
 
     @Post()
-    create(@Body() body: PostObject) {
-        return this.postsService.create(body);
+    create(@Body() body: PostObject, @Param() params) {
+        return this.postsService.create(params.token, body);
     }
 }

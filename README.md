@@ -2,6 +2,8 @@
 [NestJS](https://nestjs.com/)
 
 # TCC - UR - Gerenciador de trajeto percorrido - API
+> v1.0.20221203 (03/12/2022)
+* Adicionado autenticação do usuário
 > v1.0.20221118 (21/11/2022)
 * Git ignore .env file
 > v1.0.20221118 (18/11/2022)
