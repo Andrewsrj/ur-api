@@ -31,9 +31,11 @@ export class PostsService {
     /**
      * Busca todos os Posts no Database e relaciona com os dados do autor
      * @param token - Token de autenticação do usuário
+     * @param page - Paginação do banco de dados
+     * @param limit - Número limite de dados por chamada
      * @returns newdata - Post object com dados atualizados do autor
      */
-    async findAll(token: string): Promise<any> {
+    async findAll(token: string, page: number, limit: number): Promise<any> {
         const verifyId = await this.verifyToken(token);
         if (!verifyId) {
             console.log("Access Denied!")

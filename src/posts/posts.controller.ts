@@ -10,7 +10,7 @@ export class PostsController {
 
     @Post()
     async findAll(@Body() params): Promise<any> {
-      return this.postsService.findAll(params.tokenId);
+      return this.postsService.findAll(params.tokenId, params.page, params.limit);
     }
 
     @Post(':id')
